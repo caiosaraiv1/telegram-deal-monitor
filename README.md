@@ -1,6 +1,6 @@
 # 🤖 Telegram Deal Monitor
 
-> Monitor de promoções em tempo real para grupos do Telegram — containerizado com Docker e implantado na AWS EC2.
+> Real-time deal monitor for Telegram groups — containerized with Docker and deployed on AWS EC2.
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square&logo=python)
 ![Docker](https://img.shields.io/badge/Docker-containerized-2496ED?style=flat-square&logo=docker)
@@ -9,97 +9,97 @@
 
 ---
 
-## 📌 Sobre o Projeto
+## 📌 About the Project
 
-Bot de monitoramento que escuta mensagens em grupos do Telegram em tempo real, filtra produtos de interesse usando **regex**, e envia notificações instantâneas via bot — tudo rodando 24/7 em uma instância EC2 na AWS.
+Monitoring bot that listens to messages in Telegram groups in real time, filters products of interest using **regex**, and sends instant notifications via a bot — all running 24/7 on an AWS EC2 instance.
 
-O projeto nasceu de uma necessidade real: não perder promoções relâmpago de hardware em grupos de ofertas. Hoje roda em produção monitorando mais de 5 grupos simultaneamente.
-
----
-
-## 🏗️ Por que AWS EC2?
-
-O bot precisa de uma **conexão persistente e contínua** com o Telegram via protocolo MTProto — ele literalmente fica "ouvindo" os grupos em tempo real, sem interrupção. Isso elimina de cara soluções serverless como AWS Lambda (limite de 15 minutos de execução) ou qualquer arquitetura orientada a eventos que pressupõe execuções curtas.
-
-A EC2 foi escolhida por alguns motivos:
-
-**Processo de longa duração**: O `run_until_disconnected()` do Telethon mantém uma conexão TCP aberta indefinidamente. Só uma VM tradicional suporta esse modelo de execução.
-
-**Custo zero no Free Tier**: Uma instância `t3.micro` (2 vCPU, 1GB RAM) é mais do que suficiente para o workload do bot e entra no nível gratuito da AWS por 12 meses — custo operacional zero para um projeto pessoal.
-
-**Simplicidade operacional**: Docker na EC2 permite replicar exatamente o ambiente local em produção, sem surpresas. O mesmo `docker run` que funciona na máquina funciona na nuvem.
-
-**Controle total**: Diferente de soluções gerenciadas como ECS, a EC2 dá controle direto sobre o ambiente — útil para gerenciar o arquivo de sessão do Telethon via volume Docker, que precisa persistir entre reinicializações do container.
-
-Alternativas consideradas e descartadas: **Lambda** (limite de tempo), **ECS Fargate** (overhead desnecessário para um único container).
+The project was born from a real need: not missing flash hardware deals in deal groups. Today it runs in production monitoring more than 5 groups simultaneously.
 
 ---
 
-## ⚙️ Stack & Tecnologias
+## 🏗️ Why AWS EC2?
 
-| Tecnologia | Uso |
+The bot needs a **persistent, continuous connection** to Telegram via the MTProto protocol — it literally keeps "listening" to the groups in real time, without interruption. This immediately rules out serverless solutions like AWS Lambda (15-minute execution limit) or any event-driven architecture that assumes short executions.
+
+EC2 was chosen for a few reasons:
+
+**Long-running process**: Telethon's `run_until_disconnected()` keeps a TCP connection open indefinitely. Only a traditional VM supports this execution model.
+
+**Zero cost on the Free Tier**: A `t3.micro` instance (2 vCPU, 1GB RAM) is more than enough for the bot's workload and falls under the AWS free tier for 12 months — zero operating cost for a personal project.
+
+**Operational simplicity**: Docker on EC2 makes it possible to replicate the local environment exactly in production, with no surprises. The same `docker run` that works on the machine works in the cloud.
+
+**Full control**: Unlike managed solutions such as ECS, EC2 gives direct control over the environment — useful for managing the Telethon session file via a Docker volume, which must persist across container restarts.
+
+Alternatives considered and discarded: **Lambda** (time limit), **ECS Fargate** (unnecessary overhead for a single container).
+
+---
+
+## ⚙️ Stack & Technologies
+
+| Technology | Use |
 |---|---|
-| **Python 3.11** | Linguagem principal |
-| **Telethon** | Cliente MTProto para Telegram |
-| **Telegram Bot API** | Envio de notificações push |
-| **Regex** | Filtragem inteligente de mensagens |
-| **Docker** | Containerização da aplicação |
-| **AWS EC2** | Hospedagem 24/7 em nuvem |
-| **python-dotenv** | Gerenciamento seguro de credenciais |
+| **Python 3.11** | Main language |
+| **Telethon** | MTProto client for Telegram |
+| **Telegram Bot API** | Sending push notifications |
+| **Regex** | Smart message filtering |
+| **Docker** | Application containerization |
+| **AWS EC2** | 24/7 cloud hosting |
+| **python-dotenv** | Secure credential management |
 
 ---
 
-## 🚀 Como Funciona
+## 🚀 How It Works
 
-1. O bot se conecta ao Telegram via **MTProto** usando a biblioteca Telethon
-2. Escuta mensagens em tempo real nos grupos monitorados
-3. Aplica filtros **regex** para identificar produtos de interesse
-4. Ao detectar uma promoção, dispara uma notificação via **Telegram Bot API**
-5. Roda continuamente em um container Docker na **AWS EC2**
+1. The bot connects to Telegram via **MTProto** using the Telethon library
+2. Listens to messages in real time in the monitored groups
+3. Applies **regex** filters to identify products of interest
+4. When a deal is detected, fires a notification via the **Telegram Bot API**
+5. Runs continuously in a Docker container on **AWS EC2**
 
 ---
 
-## 🛠️ Como Rodar Localmente
+## 🛠️ Running Locally
 
-### Pré-requisitos
+### Prerequisites
 - Python 3.11+
 - Docker
-- Conta na API do Telegram (api_id e api_hash)
+- Telegram API account (api_id and api_hash)
 
-### 1. Clone o repositório
+### 1. Clone the repository
 ```bash
-git clone https://github.com/seu-usuario/telegram-deal-monitor.git
+git clone https://github.com/your-username/telegram-deal-monitor.git
 cd telegram-deal-monitor
 ```
-### 2. Obtenha as credenciais necessárias
+### 2. Get the required credentials
  
-**API_ID e API_HASH** (Telethon):
-1. Acesse [my.telegram.org](https://my.telegram.org) e faça login
-2. Vá em **API Development Tools**
-3. Crie um app e copie o `api_id` e `api_hash`
-**BOT_TOKEN** (notificações):
-1. Abra o Telegram e procure por `@BotFather`
-2. Mande `/newbot` e siga as instruções
-3. Copie o token gerado
-**CHAT_ID** (seu ID pessoal):
-1. Mande qualquer mensagem para o bot que você criou
-2. Acesse no navegador: `https://api.telegram.org/bot<SEU_TOKEN>/getUpdates`
-3. Procure pelo campo `"id"` dentro de `"chat"` — esse é seu CHAT_ID
+**API_ID and API_HASH** (Telethon):
+1. Go to [my.telegram.org](https://my.telegram.org) and log in
+2. Go to **API Development Tools**
+3. Create an app and copy the `api_id` and `api_hash`
+**BOT_TOKEN** (notifications):
+1. Open Telegram and search for `@BotFather`
+2. Send `/newbot` and follow the instructions
+3. Copy the generated token
+**CHAT_ID** (your personal ID):
+1. Send any message to the bot you created
+2. Open in the browser: `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates`
+3. Look for the `"id"` field inside `"chat"` — that is your CHAT_ID
 
-### 3. Configure as variáveis de ambiente
+### 3. Configure the environment variables
 ```bash
 cp .env.example .env
-# Edite o .env com suas credenciais
+# Edit .env with your credentials
 ```
 
 ```env
-API_ID=seu_api_id
-API_HASH=seu_api_hash
-BOT_TOKEN=seu_bot_token
-CHAT_ID=seu_chat_id
+API_ID=your_api_id
+API_HASH=your_api_hash
+BOT_TOKEN=your_bot_token
+CHAT_ID=your_chat_id
 ```
 
-### 4. Gere a sessão do Telethon
+### 4. Generate the Telethon session
 ```bash
 pip install telethon python-dotenv
 python3 -c "
@@ -107,42 +107,42 @@ import os
 from dotenv import load_dotenv
 from telethon.sync import TelegramClient
 load_dotenv()
-client = TelegramClient('sessao/telegram_deal_monitor', int(os.getenv('API_ID')), os.getenv('API_HASH'))
+client = TelegramClient('session/telegram_deal_monitor', int(os.getenv('API_ID')), os.getenv('API_HASH'))
 client.start()
 client.disconnect()
 "
 ```
 
-### 5. Build e execução com Docker
+### 5. Build and run with Docker
 ```bash
 docker build -t telegram-deal-monitor .
 docker run -d \
-  --name bot_promocoes \
+  --name deals_bot \
   --env-file .env \
-  -v $(pwd)/sessao:/app/sessao \
+  -v $(pwd)/session:/app/session \
   telegram-deal-monitor
 ```
 
-### 6. Verifique os logs
+### 6. Check the logs
 ```bash
-docker logs -f bot_promocoes
+docker logs -f deals_bot
 ```
 
 ---
 
-## ☁️ Deploy na AWS EC2
+## ☁️ Deploying to AWS EC2
 
-### 1. Crie uma instância EC2
+### 1. Create an EC2 instance
 - AMI: Ubuntu 24.04 LTS
-- Tipo: t3.micro (Free Tier)
-- Security Group: liberar porta 22 (SSH) apenas para seu IP
+- Type: t3.micro (Free Tier)
+- Security Group: open port 22 (SSH) only to your IP
 
-### 2. Conecte via SSH
+### 2. Connect via SSH
 ```bash
-ssh -i sua-chave.pem ubuntu@<IP_DA_INSTANCIA>
+ssh -i your-key.pem ubuntu@<INSTANCE_IP>
 ```
 
-### 3. Instale o Docker
+### 3. Install Docker
 ```bash
 sudo apt update
 sudo apt install -y docker.io
@@ -150,79 +150,79 @@ sudo systemctl enable docker
 sudo usermod -aG docker ubuntu
 ```
 
-### 4. Copie o projeto
+### 4. Copy the project
 ```bash
-# Na sua máquina local
+# On your local machine
 rsync -av --exclude='.venv' --exclude='__pycache__' \
-  -e "ssh -i sua-chave.pem" \
+  -e "ssh -i your-key.pem" \
   ./telegram-deal-monitor ubuntu@<IP>:~
 ```
 
-### 5. Gere a sessão e suba o container
+### 5. Generate the session and start the container
 ```bash
-# Na EC2
+# On the EC2 instance
 cd telegram-deal-monitor
-python3 -c "..." # mesmo script da etapa local
+python3 -c "..." # same script as the local step
 docker build -t telegram-deal-monitor .
-docker run -d --name bot_promocoes --env-file .env \
-  -v $(pwd)/sessao/session.session:/app/sessao/session.session \
+docker run -d --name deals_bot --env-file .env \
+  -v $(pwd)/session/session.session:/app/session/session.session \
   telegram-deal-monitor
 ```
 
 ---
 
-## 📁 Estrutura do Projeto
+## 📁 Project Structure
 
 ```
 telegram-deal-monitor/
-├── main.py              # Lógica principal do bot
-├── Dockerfile           # Configuração do container
-├── requirements.txt     # Dependências Python
-├── .env.example         # Template de variáveis de ambiente
-├── .dockerignore        # Arquivos ignorados pelo Docker
-└── sessao/              # Pasta da sessão Telethon (não commitada)
+├── main.py              # Main bot logic
+├── Dockerfile           # Container configuration
+├── requirements.txt     # Python dependencies
+├── .env.example         # Environment variables template
+├── .dockerignore        # Files ignored by Docker
+└── session/             # Telethon session folder (not committed)
 ```
 
 ---
 
-## 🔒 Segurança
+## 🔒 Security
 
-- Credenciais gerenciadas via variáveis de ambiente (nunca hardcoded)
-- Arquivo `.session` e `.env` no `.gitignore` e `.dockerignore`
-- Acesso SSH restrito ao IP do administrador via Security Group
-
----
-
-## 📈 Aprendizados & Desafios
-
-- **MTProto vs Bot API**: O Telethon usa o protocolo MTProto (cliente real), permitindo monitorar grupos sem ser admin — diferente de bots convencionais
-- **Sessão única**: O Telegram não permite a mesma sessão em dois IPs simultâneos — resolvido gerando a sessão diretamente na EC2
-- **Volumes Docker**: Persistência do arquivo `.session` via bind mount para sobreviver a reinicializações do container
-- **WSL + Docker**: Caminhos de volume precisam ser nativos do WSL, não do Windows (`/mnt/c/...`)
+- Credentials managed via environment variables (never hardcoded)
+- `.session` and `.env` files in `.gitignore` and `.dockerignore`
+- SSH access restricted to the administrator's IP via Security Group
 
 ---
 
-## 🖼️ Imagens do Projeto
+## 📈 Lessons Learned & Challenges
 
-### **1. Status do Container**
-> **Orquestração com Docker**: Visualização do container `bot_promocoes` em execução, demonstrando o isolamento da aplicação e o tempo de atividade estável.
+- **MTProto vs Bot API**: Telethon uses the MTProto protocol (a real client), allowing groups to be monitored without being an admin — unlike conventional bots
+- **Single session**: Telegram does not allow the same session on two IPs simultaneously — solved by generating the session directly on EC2
+- **Docker volumes**: Persisting the `.session` file via a bind mount so it survives container restarts
+- **WSL + Docker**: Volume paths must be native to WSL, not Windows (`/mnt/c/...`)
+
+---
+
+## 🖼️ Project Images
+
+### **1. Container Status**
+> **Docker orchestration**: View of the `deals_bot` container running, showing the application's isolation and stable uptime.
 ![DockerPS](images/print.png)
 
-### **2. Monitoramento e Lógica de Filtragem**
-> **Logs em tempo real**: O bot processando o fluxo de mensagens via MTProto. Note o filtro Regex identificando com sucesso uma oferta da **RX 9060 XT**, conforme os parâmetros definidos no código.
+### **2. Monitoring and Filtering Logic**
+> **Real-time logs**: The bot processing the message stream via MTProto. Note the Regex filter successfully identifying a deal on the **RX 9060 XT**, according to the parameters defined in the code.
 ![DockerLogs](images/print2.png)
 
-### **3. Infraestrutura Cloud (AWS)**
-> **Console AWS**: Instância `t3.micro` provisionada na região `us-east-1`. A escolha dessa infraestrutura garante que o bot opere 24/7 com custo zero dentro do Free Tier da AWS.
+### **3. Cloud Infrastructure (AWS)**
+> **AWS Console**: `t3.micro` instance provisioned in the `us-east-1` region. This infrastructure choice ensures the bot runs 24/7 at zero cost within the AWS Free Tier.
 ![AWS](images/print3.png)
 
-### **4. Resultado Final: Notificação Push**
-> **Experiência do Usuário**: Notificação instantânea enviada via Telegram Bot API após a validação da oferta. O fluxo completo garante que o alerta chegue ao dispositivo móvel em poucos segundos.
-![Notificação](images/print4.jpeg)
+### **4. Final Result: Push Notification**
+> **User Experience**: Instant notification sent via the Telegram Bot API after the deal is validated. The complete flow ensures the alert reaches the mobile device within a few seconds.
+![Notification](images/print4.jpeg)
 
 
 ---
 
-## 📄 Licença
+## 📄 License
 
-MIT License — sinta-se livre para usar e adaptar.
+MIT License — feel free to use and adapt.

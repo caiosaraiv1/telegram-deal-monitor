@@ -1,17 +1,17 @@
-# 1. Imagem base oficial do Python (versão slim = mais leve)
+# 1. Official Python base image (slim version = lighter)
 FROM python:3.11-slim
 
-# 2. Define o diretório de trabalho dentro do container
+# 2. Set the working directory inside the container
 WORKDIR /app
 
-# 3. Copia o arquivo de dependências primeiro (boa prática para cache do Docker)
+# 3. Copy the dependencies file first (good practice for Docker caching)
 COPY requirements.txt .
 
-# 4. Instala as dependências
+# 4. Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 5. Copia o restante do código para dentro do container
+# 5. Copy the rest of the code into the container
 COPY . .
 
-# 6. Comando que será executado quando o container iniciar
+# 6. Command executed when the container starts
 CMD ["python", "-u", "main.py"]

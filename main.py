@@ -10,11 +10,11 @@ api_hash = os.getenv('API_HASH')
 bot_token = os.getenv('BOT_TOKEN')
 chat_id = os.getenv('CHAT_ID')
 
-client = TelegramClient('sessao/telegram_deal_monitor', api_id, api_hash)
+client = TelegramClient('session/telegram_deal_monitor', api_id, api_hash)
 
-def enviar_notificacao(texto):
+def send_notification(text):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-    requests.post(url, json={'chat_id': chat_id, 'text': texto})
+    requests.post(url, json={'chat_id': chat_id, 'text': text})
 
 group_list = [
       -1001610005189,
@@ -25,7 +25,7 @@ group_list = [
       -5270931373
 ]
 
-pecas_alvo = [
+target_parts = [
     r'5700x',
     r'9060\s?xt',
     r'16gb.*ddr4.*cl16',
@@ -39,17 +39,17 @@ pecas_alvo = [
     r'27.*(qhd|1440p).*(180|165|170)\s?hz'
 ]
 
-filtro_regex = f"(?i)({ '|'.join(pecas_alvo) })"
+regex_filter = f"(?i)({ '|'.join(target_parts) })"
 
-print(f"Monitorando {len(group_list)} grupos...")
+print(f"Monitoring {len(group_list)} groups...")
 
 @client.on(events.NewMessage(chats=group_list))
 async def handler(event):
-    texto = event.message.text
-    if texto and re.search(filtro_regex, texto):
-        print(f"Mensagem recebida de: {event.chat_id} - {texto}")
-        enviar_notificacao(f"Promoção encontrada!\n\n{texto}")
+    text = event.message.text
+    if text and re.search(regex_filter, text):
+        print(f"Message received from: {event.chat_id} - {text}")
+        send_notification(f"Deal found!\n\n{text}")
 
 with client:
-      print("Programa rodando!")
+      print("Program running!")
       client.run_until_disconnected()
